@@ -1,0 +1,15 @@
+[Unit]
+Description=ThermoPI-Cottage Status Reader
+After=multi-user.target network.target
+
+[Service]
+User=pi
+Type=simple
+ExecStart=/usr/bin/python3 /opt/ThermoPI-Cottage/cottage.py > /dev/null 2>&1
+KillSignal=SIGINT
+Restart=always
+RestartSec=10
+SyslogIdentifier=ThermoPI-Cottage
+
+[Install]
+WantedBy=multi-user.target
