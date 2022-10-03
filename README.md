@@ -1,13 +1,13 @@
-# ThermoPI-Furnace
+# ThermoPI-Cottage
 
 Use a Raspberry PI connected to one or more temperature sensors to send the results to a MQTT server.
 
 ## USAGE
 
-Install the program into opt/ThermoPI-Furnace or any suitable location. (Some people like /usr/local/bin instead of /opt) Make sure the username that is going to be running this script has access to the files and is able to get at python and anything else needed and used here-in.
+Install the program into opt/ThermoPI-Cottage or any suitable location. (Some people like /usr/local/bin instead of /opt) Make sure the username that is going to be running this script has access to the files and is able to get at python and anything else needed and used here-in.
 
 You will need to rename the file ***MYsecretsSample.yaml*** to ***MYsecrets.yaml***.
-Edit the contents of the new ***MYsecrets.yaml*** to match your MQTT & Home Assistant installation and requirements. You will also need to supply the full path to the secrets file in the **Get the parameter file** section of this python code around line 225.
+Edit the contents of the new ***MYsecrets.yaml*** to match your MQTT & Home Assistant installation and requirements. You will also need to supply the full path to the secrets file in the **Get the parameter file** section of this python code around line 95.
 
 This program grabs the 2nd half of the MAC address to use as the device ID. This only works consistantly when there is only 1 Ethernet interface configured or you have your multiple interfaces cloned to the same MAC Address. For instance if it boots from WIFI, it will grab that MAC, and if it uses the Ethernet cable or a USB interface, it will grab that MAC. You get my point. This can be avoided by hard coding the DeviceID with the random and unique number of your choice. Also I have not tested this with IP6 addresses. If you have solutions to any of this, please share.
 
@@ -17,11 +17,11 @@ Here is a good reference on setting up a program to run from systemd. Use it to 
 
 [How-To Geek on 'Startup With Systemd'](https://www.howtogeek.com/687970/how-to-run-a-linux-program-at-startup-with-systemd/)
 
-To run the program at boot in order to get constant readings, there is the ThermoPIFurnace.service to run this as a service with load-service.sh there to set it up as a service.
+To run the program at boot in order to get constant readings, there is the ThermoPICottage.service to run this as a service with load-service.sh there to set it up as a service.
 
 The load-service.sh script will stop and scratch reload the service from the local repository (Once you get all the permissions happy).
 
-The furnRestart.sh is the script to quickly restart the process if needed during troubleshooting. I found it helpful.
+The cottRestart.sh is the script to quickly restart the process if needed during troubleshooting. I found it helpful.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Program requirements (as written):  (Feel free to fork it & update the obsolete 
 **If you have any questions, comments or additions be sure to add an issue and bring them up on my Discord Server:**
 
 This is roughly the circuit used with this program:
-![Sample Circuit matching this software](ThermoPI-Furnace.png)
+![Sample Circuit matching this software](ThermoPI-Cottage.png)
 
 ### Contact Links
 
