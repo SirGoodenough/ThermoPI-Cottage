@@ -92,7 +92,7 @@ humidity = 0.0
 count = 0
 
 #  Get the parameter file
-with open("/opt/ThermoPI-Furnace/MYsecrets.yaml", "r") as ymlfile:
+with open("/opt/ThermoPI-Cottage/MYsecrets.yaml", "r") as ymlfile:
     MYs = yaml.safe_load(ymlfile)
 
 LOOP = MYs["MAIN"]["LOOP"]
