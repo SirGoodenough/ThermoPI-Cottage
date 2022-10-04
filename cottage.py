@@ -16,7 +16,7 @@ def W1():
     global count
 
     temp = 0.0
-    sensor = W1ThermSensor(list[count])
+    sensor = W1ThermSensor(DS18B20, list[count])
 
     # Get the temp
     tempC = sensor.get_temperature()
