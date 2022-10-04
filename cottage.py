@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from w1thermsensor import W1ThermSensor, Unit
+from w1thermsensor import W1ThermSensor
 import paho.mqtt.client as mqtt
 import sys
 import time
@@ -14,10 +14,9 @@ def W1():
     global sensor
     global list
     global count
-
     temp = 0.0
-    sensor = W1ThermSensor(sensor_type=Unit.THERM_SENSOR_DS18B20, sensor_id=list[count])
 
+    sensor = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, list[count])
     # Get the temp
     tempC = sensor.get_temperature()
     # Test the result.  Make sure it is reasonable and not a glitch.
