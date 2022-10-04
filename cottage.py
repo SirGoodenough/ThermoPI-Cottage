@@ -155,7 +155,7 @@ W107_STATE = TOPIC + W107_ID + '/state'
 
 ADDR_W108 = MYs["W1"]["ADDR_W108"]
 NAME_W108 = MYs["W1"]["NAME_W108"]
-W108_ID =  DEVICE_ID + '_' + MYs["W1"]["WW108_ID"]
+W108_ID =  DEVICE_ID + '_' + MYs["W1"]["W108_ID"]
 CONFIG_W108 = TOPIC + W108_ID + '/config'
 W108_STATE = TOPIC + W108_ID + '/state'
 
