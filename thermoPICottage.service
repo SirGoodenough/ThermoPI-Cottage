@@ -3,7 +3,7 @@ Description=ThermoPI-Cottage Status Reader
 After=multi-user.target network.target
 
 [Service]
-User=pi
+User=cottagepi
 Type=simple
 ExecStart=/usr/bin/python3 /opt/ThermoPI-Cottage/cottage.py > /dev/null 2>&1
 KillSignal=SIGINT
