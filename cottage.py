@@ -224,7 +224,7 @@ payload_W101config = {
         "mf": "SirGoodenough",
         "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
         "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/master/README.md"
     },
     "unit_of_meas":"°F",
     "dev_cla":"temperature",
@@ -607,11 +607,12 @@ mqttConnect()
 
 try:
     count = 0
-    while count < 17:
-        if count > 15:  # Reset the loop
+    while count < 16:
+        if count > 14:  # Reset the loop
             count = 0
         count += 1
         print('Updating loop %s.' % count)
+        print('Temperature %s.' % temp)
         temp = 0.0
         mqttSend()
         time.sleep(LOOP)
