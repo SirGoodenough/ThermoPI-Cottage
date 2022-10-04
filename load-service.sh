@@ -4,7 +4,7 @@ echo "Stopping ThermoPI-Cottage"
 sudo systemctl stop thermoPICottage.service  
 
 echo "Copy file over"
-sudo cp /opt/ThermoPI-Furnace/thermoPICottage.service /lib/systemd/system/thermoPICottage.service
+sudo cp /opt/ThermoPI-Cottage/thermoPICottage.service /lib/systemd/system/thermoPICottage.service
 
 echo "Change permissions on new file"
 sudo chmod 644 /lib/systemd/system/thermoPICottage.service
