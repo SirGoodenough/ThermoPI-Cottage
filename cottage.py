@@ -28,6 +28,7 @@ def W1():
     print("{:.1f}".format(tF))
     # Done
     temp = tF
+    
 # Subroutine to send results to MQTT
 def mqttSend():
     global temp
