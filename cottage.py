@@ -19,15 +19,16 @@ def W1():
 
     sensor = W1ThermSensor(sensor_type=Sensor.DS18B20, sensor_id=sensorSN)
     # Get the temp
-    temp = sensor.get_temperature(Sensor.DEGREES_F)
+    tempC = sensor.get_temperature()
     # Test the result.  Make sure it is reasonable and not a glitch.
-    if temp is None or temp > 220.0 or temp < 1.0:
+    if tempC is None or tempC > 150.0 or tempC < 1.0:
         return
     # Conversion to F & round to .1
-    temp = round(temp, 1)
+    tF = round((9.0/5.0 * tempC + 32.0), 1)
     # Use while Troubleshooting...
     # print("{:.1f}".format(tF))
     # Done
+    temp = tF
 
 # Subroutine to send results to MQTT
 def mqttSend():
