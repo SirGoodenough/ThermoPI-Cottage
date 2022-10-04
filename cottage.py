@@ -15,20 +15,19 @@ def W1():
     global list
     global count
     temp = 0.0
-    sensorSN = list[count]
+    sensorSN = str(list[count])
 
     sensor = W1ThermSensor(sensor_type=Sensor.DS18B20, sensor_id=sensorSN)
     # Get the temp
-    tempC = sensor.get_temperature()
+    temp = sensor.get_temperature(Sensor.DEGREES_F)
     # Test the result.  Make sure it is reasonable and not a glitch.
-    if tempC is None or tempC > 150.0 or tempC < 1.0:
+    if temp is None or temp > 220.0 or temp < 1.0:
         return
     # Conversion to F & round to .1
-    tF = round((9.0/5.0 * tempC + 32.0), 1)
+    temp = round(temp, 1)
     # Use while Troubleshooting...
-    print("{:.1f}".format(tF))
+    # print("{:.1f}".format(tF))
     # Done
-    temp = tF
 
 # Subroutine to send results to MQTT
 def mqttSend():
@@ -614,7 +613,9 @@ try:
             count = 0
         count += 1
         print('Updating loop %s.' % count)
-        print('Temperature %s.' % temp)
+        # Use while Troubleshooting...
+        # print('Temperature %s.' % temp)
+        # Done
         temp = 0.0
         W1()
         mqttSend()
