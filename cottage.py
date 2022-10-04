@@ -614,6 +614,7 @@ try:
         print('Updating loop %s.' % count)
         print('Temperature %s.' % temp)
         temp = 0.0
+        W1()
         mqttSend()
         time.sleep(LOOP)
 
