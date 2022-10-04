@@ -21,6 +21,8 @@ To run the program at boot in order to get constant readings, there is the Therm
 
 The load-service.sh script will stop and scratch reload the service from the local repository (Once you get all the permissions happy).
 
+The user in the ThermoPICottage.service should match the user that owns the files in the cloned directory and for security reasons should not be root or pi.
+
 The cottRestart.sh is the script to quickly restart the process if needed during troubleshooting. I found it helpful.
 
 ## Requirements
