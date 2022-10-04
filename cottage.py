@@ -609,8 +609,8 @@ mqttConnect()
 
 try:
     count = 0
-    while count < 17:
-        if count > 15:  # Reset the loop
+    while count < 16:
+        if count > 14:  # Reset the loop
             count = 0
         count += 1
         print('Updating loop %s.' % count)
