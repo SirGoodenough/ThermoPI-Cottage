@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from w1thermsensor import W1ThermSensor, Unit
+from w1thermsensor import W1ThermSensor
 import paho.mqtt.client as mqtt
 import sys
 import time
@@ -16,18 +16,19 @@ def W1():
     global count
 
     temp = 0.0
-    sensorId = str(list[count])
-
-    sensor = W1ThermSensor(Unit.THERM_SENSOR_DS18B20, sensorId])
+    sensor = W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20, list[count])
 
     # Get the temp
-    temp = sensor.get_temperature(Unit.DEGREES_F)
+    tempC = sensor.get_temperature()
     # Test the result.  Make sure it is reasonable and not a glitch.
-    if temp is None or temp > 220.0 or temp < 1.0:
+    if tempC is None or tempC > 150.0 or tempC < 1.0:
         return
-    # round to .1
-    temp = round(temp, 1)
-
+    # Conversion to F & round to .1
+    tF = round((9.0/5.0 * tempC + 32.0), 1)
+    # Use while Troubleshooting...
+    print("{:.1f}".format(tF))
+    # Done
+    temp = tF
 # Subroutine to send results to MQTT
 def mqttSend():
     global temp
