@@ -18,7 +18,7 @@ def W1():
     temp = 0.0
     sensorId = str(list[count])
 
-    sensor = W1ThermSensor(sensor_type=Unit.DS18B20, sensor_id=sensorId)
+    sensor = W1ThermSensor(Unit.DS18B20, sensorId)
 
     # Get the temp
     temp = sensor.get_temperature(Unit.DEGREES_F)
