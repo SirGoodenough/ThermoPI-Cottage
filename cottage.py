@@ -80,13 +80,6 @@ def mqttConnect():
     mqttc.publish(CONFIG_W106, json.dumps(payload_W106config), 1, True)
     mqttc.publish(CONFIG_W107, json.dumps(payload_W107config), 1, True)
     mqttc.publish(CONFIG_W108, json.dumps(payload_W108config), 1, True)
-    mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
-    mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
-    mqttc.publish(CONFIG_W111, json.dumps(payload_W111config), 1, True)
-    mqttc.publish(CONFIG_W112, json.dumps(payload_W112config), 1, True)
-    mqttc.publish(CONFIG_W113, json.dumps(payload_W113config), 1, True)
-    mqttc.publish(CONFIG_W114, json.dumps(payload_W114config), 1, True)
-    mqttc.publish(CONFIG_W115, json.dumps(payload_W115config), 1, True)
 
 temp = 0.0
 humidity = 0.0
@@ -161,53 +154,11 @@ W108_ID =  DEVICE_ID + '_' + MYs["W1"]["W108_ID"]
 CONFIG_W108 = TOPIC + W108_ID + '/config'
 W108_STATE = TOPIC + W108_ID + '/state'
 
-ADDR_W109 = MYs["W1"]["ADDR_W109"]
-NAME_W109 = MYs["W1"]["NAME_W109"]
-W109_ID =  DEVICE_ID + '_' + MYs["W1"]["W109_ID"]
-CONFIG_W109 = TOPIC + W109_ID + '/config'
-W109_STATE = TOPIC + W109_ID + '/state'
-
-ADDR_W110 = MYs["W1"]["ADDR_W110"]
-NAME_W110 = MYs["W1"]["NAME_W110"]
-W110_ID =  DEVICE_ID + '_' + MYs["W1"]["W110_ID"]
-CONFIG_W110 = TOPIC + W110_ID + '/config'
-W110_STATE = TOPIC + W110_ID + '/state'
-
-ADDR_W111 = MYs["W1"]["ADDR_W111"]
-NAME_W111 = MYs["W1"]["NAME_W111"]
-W111_ID =  DEVICE_ID + '_' + MYs["W1"]["W111_ID"]
-CONFIG_W111 = TOPIC + W111_ID + '/config'
-W111_STATE = TOPIC + W111_ID + '/state'
-
-ADDR_W112 = MYs["W1"]["ADDR_W112"]
-NAME_W112 = MYs["W1"]["NAME_W112"]
-W112_ID =  DEVICE_ID + '_' + MYs["W1"]["W112_ID"]
-CONFIG_W112 = TOPIC + W112_ID + '/config'
-W112_STATE = TOPIC + W112_ID + '/state'
-
-ADDR_W113 = MYs["W1"]["ADDR_W113"]
-NAME_W113 = MYs["W1"]["NAME_W113"]
-W113_ID =  DEVICE_ID + '_' + MYs["W1"]["W113_ID"]
-CONFIG_W113 = TOPIC + W113_ID + '/config'
-W113_STATE = TOPIC + W113_ID + '/state'
-
-ADDR_W114 = MYs["W1"]["ADDR_W114"]
-NAME_W114 = MYs["W1"]["NAME_W114"]
-W114_ID =  DEVICE_ID + '_' + MYs["W1"]["W114_ID"]
-CONFIG_W114 = TOPIC + W114_ID + '/config'
-W114_STATE = TOPIC + W114_ID + '/state'
-
-ADDR_W115 = MYs["W1"]["ADDR_W115"]
-NAME_W115 = MYs["W1"]["NAME_W115"]
-W115_ID =  DEVICE_ID + '_' + MYs["W1"]["W115_ID"]
-CONFIG_W115 = TOPIC + W115_ID + '/config'
-W115_STATE = TOPIC + W115_ID + '/state'
-
 # These are the s/n's used for the temp sensors.
-list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, ADDR_W109, ADDR_W110, ADDR_W111, ADDR_W112, ADDR_W113, ADDR_W114, ADDR_W115, 999, 999 ]
+list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, 999, 999 ]
 
 # These are the STATE Topics
-state_topic = ["", W101_STATE, W102_STATE, W103_STATE, W104_STATE, W105_STATE, W106_STATE, W107_STATE, W108_STATE, W109_STATE, W110_STATE, W111_STATE, W112_STATE, W113_STATE, W114_STATE, W115_STATE, "", "" ]
+state_topic = ["", W101_STATE, W102_STATE, W103_STATE, W104_STATE, W105_STATE, W106_STATE, W107_STATE, W108_STATE, "", "" ]
 
 payload_W101config = {
     "name": NAME_W101,
@@ -417,188 +368,6 @@ payload_W108config = {
     "val_tpl": "{{ value_json.temperature }}"
 }
 
-payload_W109config = {
-    "name": NAME_W109,
-    "stat_t": W109_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W109_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W110config = {
-    "name": NAME_W110,
-    "stat_t": W110_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W110_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W111config = {
-    "name": NAME_W111,
-    "stat_t": W111_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W111_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W112config = {
-    "name": NAME_W112,
-    "stat_t": W112_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W112_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W113config = {
-    "name": NAME_W113,
-    "stat_t": W113_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W113_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W114config = {
-    "name": NAME_W114,
-    "stat_t": W114_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W114_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
-payload_W115config = {
-    "name": NAME_W115,
-    "stat_t": W115_STATE,
-    "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
-    "uniq_id": W115_ID,
-    "dev": {
-        "ids": [
-        D_ID,
-        DEVICE_ID
-        ],
-        "name": "ThermoPI Cottage",
-        'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
-    },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
-    "frc_upd": True,
-    'exp_aft': 400,
-    "val_tpl": "{{ value_json.temperature }}"
-}
-
     #Log Message to start
 print('Logging {0} sensor measurements every {1} seconds.'.format(D_ID, LOOP))
 print('Press Ctrl-C to quit.')
@@ -609,8 +378,8 @@ mqttConnect()
 
 try:
     count = 0
-    while count < 16:
-        if count > 14:  # Reset the loop
+    while count < 9:
+        if count > 7:  # Reset the loop
             count = 0
         count += 1
         print('Updating loop %s.' % count)
