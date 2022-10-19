@@ -80,6 +80,8 @@ def mqttConnect():
     mqttc.publish(CONFIG_W106, json.dumps(payload_W106config), 1, True)
     mqttc.publish(CONFIG_W107, json.dumps(payload_W107config), 1, True)
     mqttc.publish(CONFIG_W108, json.dumps(payload_W108config), 1, True)
+    mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
+    mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
 
 temp = 0.0
 humidity = 0.0
@@ -154,11 +156,23 @@ W108_ID =  DEVICE_ID + '_' + MYs["W1"]["W108_ID"]
 CONFIG_W108 = TOPIC + W108_ID + '/config'
 W108_STATE = TOPIC + W108_ID + '/state'
 
+ADDR_W109 = MYs["W1"]["ADDR_W109"]
+NAME_W109 = MYs["W1"]["NAME_W109"]
+W109_ID =  DEVICE_ID + '_' + MYs["W1"]["W109_ID"]
+CONFIG_W109 = TOPIC + W109_ID + '/config'
+W109_STATE = TOPIC + W109_ID + '/state'
+
+ADDR_W110 = MYs["W1"]["ADDR_W110"]
+NAME_W110 = MYs["W1"]["NAME_W110"]
+W110_ID =  DEVICE_ID + '_' + MYs["W1"]["W110_ID"]
+CONFIG_W110 = TOPIC + W110_ID + '/config'
+W110_STATE = TOPIC + W110_ID + '/state'
+
 # These are the s/n's used for the temp sensors.
-list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, 999, 999 ]
+list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, ADDR_W109, ADDR_W110, 999, 999 ]
 
 # These are the STATE Topics
-state_topic = ["", W101_STATE, W102_STATE, W103_STATE, W104_STATE, W105_STATE, W106_STATE, W107_STATE, W108_STATE, "", "" ]
+state_topic = ["", W101_STATE, W102_STATE, W103_STATE, W104_STATE, W105_STATE, W106_STATE, W107_STATE, W108_STATE, W109_STATE, W110_STATE, "", "" ]
 
 payload_W101config = {
     "name": NAME_W101,
@@ -368,6 +382,59 @@ payload_W108config = {
     "val_tpl": "{{ value_json.temperature }}"
 }
 
+
+payload_W109config = {
+    "name": NAME_W109,
+    "stat_t": W109_STATE,
+    "avty_t": LWT,
+    "pl_avail": "Online",
+    "pl_not_avail": "Offline",
+    "uniq_id": W109_ID,
+    "dev": {
+        "ids": [
+        D_ID,
+        DEVICE_ID
+        ],
+        "name": "ThermoPI Cottage",
+        'sa': AREA,
+        "mf": "SirGoodenough",
+        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
+        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
+        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+    },
+    "unit_of_meas":"°F",
+    "dev_cla":"temperature",
+    "frc_upd": True,
+    'exp_aft': 400,
+    "val_tpl": "{{ value_json.temperature }}"
+}
+
+payload_W110config = {
+    "name": NAME_W110,
+    "stat_t": W110_STATE,
+    "avty_t": LWT,
+    "pl_avail": "Online",
+    "pl_not_avail": "Offline",
+    "uniq_id": W110_ID,
+    "dev": {
+        "ids": [
+        D_ID,
+        DEVICE_ID
+        ],
+        "name": "ThermoPI Cottage",
+        'sa': AREA,
+        "mf": "SirGoodenough",
+        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
+        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
+        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+    },
+    "unit_of_meas":"°F",
+    "dev_cla":"temperature",
+    "frc_upd": True,
+    'exp_aft': 400,
+    "val_tpl": "{{ value_json.temperature }}"
+}
+
     #Log Message to start
 print('Logging {0} sensor measurements every {1} seconds.'.format(D_ID, LOOP))
 print('Press Ctrl-C to quit.')
@@ -378,8 +445,8 @@ mqttConnect()
 
 try:
     count = 0
-    while count < 9:
-        if count > 7:  # Reset the loop
+    while count < 11:
+        if count > 9:  # Reset the loop
             count = 0
         count += 1
         print('Updating loop %s.' % count)

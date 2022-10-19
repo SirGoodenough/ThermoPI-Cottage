@@ -1,6 +1,6 @@
 # ThermoPI-Cottage
 
-Use a Raspberry PI connected to eight Dallas 1 wire temperature sensors to send the results to a MQTT server.
+Use a Raspberry PI connected to ten Dallas 1 wire temperature sensors to send the results to a MQTT server.
 
 ## USAGE
 
