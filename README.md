@@ -42,10 +42,13 @@ This is roughly the circuit used with this program:
 ![Sample Circuit matching this software](ThermoPI-Cottage.png)
 
 For my install I used this adapter board to connect the probes: 
-https://www.amazon.com/Screw-Terminal-Breakout-Module-Raspberry/dp/B08LH97XCR?tag=drzzs0e-20
+<https://www.amazon.com/Screw-Terminal-Breakout-Module-Raspberry/dp/B08LH97XCR?tag=drzzs0e-20>
 
 These are the sensors I used:
-https://www.amazon.com/dp/B08W27W7LJ?tag=drzzs0e-20
+<https://www.amazon.com/dp/B08W27W7LJ?tag=drzzs0e-20>
+
+These are the JST Connector pigtails I used:
+<https://www.amazon.com/HKBAYI-50Pair-50sets-Connector-WS2812B/dp/B00NBSH4CA?tag=drzzs0e-20>
 
 ### Contact Links
 
