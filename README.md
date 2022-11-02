@@ -33,7 +33,7 @@ Program requirements (as written):
 
 + Python 3.6 or better
 + [PyYAML](https://pypi.org/project/PyYAML/) For reading the YAML parameter file
-+ [W1ThermSensor](https://github.com/timofurrer/w1thermsensor) For 2 wire temp sensors [(DS18B20)](http://www.d3noob.org/2015/02/raspberry-pi-multiple-temperature.html)
++ [W1ThermSensor](https://github.com/timofurrer/w1thermsensor) For 1/2 wire temp sensors [(DS18B20)](http://www.d3noob.org/2015/02/raspberry-pi-multiple-temperature.html)
 + [paho-mqtt](https://pypi.org/project/paho-mqtt/) For MQTT broker connection
 
 **If you have any questions, comments or additions be sure to add an issue and bring them up on my Discord Server:**
