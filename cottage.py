@@ -24,7 +24,7 @@ def W1():
     if tempC is None or tempC > 150.0 or tempC < 1.0:
         return
     # Conversion to F & round to .1
-    tF = round((9.0/5.0 * tempC + 32.0), 1)
+    tF = round((9.0/5.0 * tempC + 32.0), 2)
     # Use while Troubleshooting...
     # print("{:.1f}".format(tF))
     # Done
