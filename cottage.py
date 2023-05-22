@@ -7,6 +7,9 @@ import time
 import yaml
 import json
 import uuid
+import RPi.GPIO as GPIO
+
+Release_date = "2023-05-30"
 
 # Subroutine look up 1 Wire temp(s)
 def W1():
@@ -45,12 +48,12 @@ def mqttSend():
         payloadOut = {
             "temperature": temp}
         OutState = state_topic[count]
-        print('Updating {0} {1}'.format(OutState,json.dumps(payloadOut) ) )
+        print(f"Updating {OutState} {json.dumps(payloadOut)}")
         (result1,mid) = mqttc.publish(OutState, json.dumps(payloadOut), 1, True)
 
         currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
-        print('Date Time:   {0}'.format(currentdate))
-        print('MQTT Update result {0}'.format(result1))
+        print(f"Date Time:   {currentdate}")
+        print(f"MQTT Update result {result1}")
 
         if result1 == 1:
             raise ValueError('Result message from MQTT was not 0')
@@ -68,7 +71,8 @@ def mqttSend():
         pass
 
 def mqttConnect():
-    print('Connecting to MQTT on {0} {1}'.format(HOST,PORT))
+    mqttc.on_connect = on2connect
+    mqttc.on_message = on2message
     mqttc.connect(HOST, PORT, 60)
     mqttc.loop_start()
     mqttc.publish(LWT, "Online", 1, True)
@@ -83,6 +87,40 @@ def mqttConnect():
     mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
     mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
 
+def on2connect(mqttc, userdata, flags, rc):
+    if rc==0:
+        print(f"Connecting to MQTT on {HOST} {PORT} with result code {str(rc)}.")
+        mqttc.subscribe((WHTOPIC,0))
+        # mqttc.subscribe("$SYS/#")
+    else:
+        print(f"Bad connection Returned code= {str(rc)}.")
+
+def on2message(mqttc, userdata, msg):
+    # The callback for when a PUBLISH message is received from the server.
+
+    Topic = msg.topic
+    whSet = float(msg.payload)
+
+    print (f"Message: {str(whSet)} from Topic: {Topic}")
+
+    # Handle Message
+    if ( Topic == WHTOPIC and
+        isinstance(whSet, float) and
+        whSet <= TRANGEMAX and
+        whSet >= TRANGEMIN
+        ):
+        SetAngle(float(whSet))
+
+def SetAngle(angle):
+    duty = angle / 27 + PWM0
+
+    GPIO.output(SERVOGPIO, GPIO_ON)
+    srvo.ChangeDutyCycle(duty)
+    time.sleep(2)
+    GPIO.output(SERVOGPIO, GPIO_OFF)
+    srvo.ChangeDutyCycle(0)
+    print (f"Set angle: {angle} duty: {duty}")
+
 temp = 0.0
 humidity = 0.0
 # set loop counter
@@ -92,12 +130,29 @@ count = 0
 with open("/opt/ThermoPI-Cottage/MYsecrets.yaml", "r") as ymlfile:
     MYs = yaml.safe_load(ymlfile)
 
+# GPIO Setup
+SERVOGPIO = int(MYs["WHCONTROL"]["SERVOGPIO"])
+TSTATGPIO = int(MYs["WHCONTROL"]["TSTATGPIO"])
+WHTOPIC = MYs["WHCONTROL"]["WHTOPIC"]
+PULSEFREQUENCY = float(MYs["WHCONTROL"]["PULSEFREQUENCY"])
+TRANGEMIN = float(MYs["WHCONTROL"]["TRANGEMIN"])
+TRANGEMAX = float(MYs["WHCONTROL"]["TRANGEMAX"])
+PWM0 = float(MYs["WHCONTROL"]["PWM0"])
+GPIO_ON = GPIO.HIGH
+GPIO_OFF = GPIO.LOW
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SERVOGPIO, GPIO.OUT)
+GPIO.setup(TSTATGPIO, GPIO.IN)
+srvo = GPIO.PWM(SERVOGPIO,PULSEFREQUENCY)
+srvo.start(0)
+
 LOOP = MYs["MAIN"]["LOOP"]
 HOST = MYs["MAIN"]["HOST"]
 PORT = MYs["MAIN"]["PORT"]
 USER = MYs["MAIN"]["USER"]
-PWD = MYs["MAIN"]["PWD"]
 AREA = MYs["MAIN"]["AREA"]
+PWD = MYs["MAIN"]["PWD"]
 
 # Pulling the unique MAC SN section address using uuid and getnode() function 
 DEVICE_ID = (hex(uuid.getnode())[-6:]).upper()
@@ -174,27 +229,40 @@ list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, A
 # These are the STATE Topics
 state_topic = ["", W101_STATE, W102_STATE, W103_STATE, W104_STATE, W105_STATE, W106_STATE, W107_STATE, W108_STATE, W109_STATE, W110_STATE, "", "" ]
 
+# Device Parameters for MQTT Discovery
+pl_avail = "Online"
+pl_not_avail = "Offline"
+name = "ThermoPI Cottage"
+mf = "SirGoodenough"
+mdl = "HomeAssistant Discovery for ThermoPI Cottage"
+sw = Release_date
+hw = "https://github.com/SirGoodenough/ThermoPI-Cottage"
+cu = "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/master/README.md"
+unit_of_meas = "°F"
+dev_cla = "temperature"
+
 payload_W101config = {
     "name": NAME_W101,
     "stat_t": W101_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W101_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/master/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -204,23 +272,24 @@ payload_W102config = {
     "name": NAME_W102,
     "stat_t": W102_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W102_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -230,23 +299,24 @@ payload_W103config = {
     "name": NAME_W103,
     "stat_t": W103_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W103_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -256,23 +326,24 @@ payload_W104config = {
     "name": NAME_W104,
     "stat_t": W104_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W104_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -282,23 +353,24 @@ payload_W105config = {
     "name": NAME_W105,
     "stat_t": W105_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W105_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -308,23 +380,24 @@ payload_W106config = {
     "name": NAME_W106,
     "stat_t": W106_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W106_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -334,23 +407,24 @@ payload_W107config = {
     "name": NAME_W107,
     "stat_t": W107_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W107_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -360,50 +434,51 @@ payload_W108config = {
     "name": NAME_W108,
     "stat_t": W108_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W108_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
 }
 
-
 payload_W109config = {
     "name": NAME_W109,
     "stat_t": W109_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W109_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
@@ -413,31 +488,32 @@ payload_W110config = {
     "name": NAME_W110,
     "stat_t": W110_STATE,
     "avty_t": LWT,
-    "pl_avail": "Online",
-    "pl_not_avail": "Offline",
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
     "uniq_id": W110_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": "ThermoPI Cottage",
+        "name": name,
         'sa': AREA,
-        "mf": "SirGoodenough",
-        "mdl": "HomeAssistant Discovery for ThermoPI Cottage",
-        "sw": "https://github.com/SirGoodenough/ThermoPI-Cottage",
-        "cu": "https://github.com/SirGoodenough/ThermoPI-Cottage/blob/main/README.md"
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
     },
-    "unit_of_meas":"°F",
-    "dev_cla":"temperature",
+    "unit_of_meas": unit_of_meas,
+    "dev_cla": dev_cla,
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
 }
 
-    #Log Message to start
-print('Logging {0} sensor measurements every {1} seconds.'.format(D_ID, LOOP))
-print('Press Ctrl-C to quit.')
+#Log Message to start
+print(f"Logging {D_ID} sensor measurements every {LOOP} seconds.")
+print(f"Press Ctrl-C to quit.")
 mqttc = mqtt.Client(D_ID, 'False', 'MQTTv311')
 mqttc.disable_logger()  # Saves wear on SD card Memory.  Remove as needed for troubleshooting
 mqttc.username_pw_set(USER, PWD) # deactivate if not needed
@@ -449,14 +525,15 @@ try:
         if count > 9:  # Reset the loop
             count = 0
         count += 1
-        print('Updating loop %s.' % count)
+        # print('Updating loop %s.' % count)
         # Use while Troubleshooting...
         # print('Temperature %s.' % temp)
         # Done
         temp = 0.0
         W1()
         mqttSend()
-        time.sleep(LOOP)
+        for i in range(LOOP):
+            time.sleep(1)
 
 except KeyboardInterrupt:
     print(' Keyboard Interrupt. Closing MQTT.')
@@ -464,4 +541,5 @@ except KeyboardInterrupt:
     time.sleep(1)
     mqttc.loop_stop()
     mqttc.disconnect()
+    GPIO.cleanup()
     sys.exit()
