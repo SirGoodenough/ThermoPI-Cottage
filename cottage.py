@@ -39,6 +39,14 @@ def mqttSend():
     global mqttc
     global count
     global state_topic
+    global TSTATGPIO
+    global TStatState
+    global STATEBS
+
+    if GPIO.input(TSTATGPIO):
+        TStatState = "ON"
+    else:
+        TStatState = "OFF"
 
     if temp == 0.0:
         return
@@ -53,10 +61,18 @@ def mqttSend():
 
         currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
         print(f"Date Time:   {currentdate}")
-        print(f"MQTT Update result {result1}")
+        print(f"MQTT Update 1 result {result1}")
 
-        if result1 == 1:
+        if result1 != 0:
             raise ValueError('Result message from MQTT was not 0')
+
+        print(f"Updating {STATEBS} {TStatState}")
+        (result2,mid) = mqttc.publish(STATEBS, TStatState, 1, True)
+
+        print(f"MQTT Update 2 result {result2}")
+
+        if result2 != 0:
+            raise ValueError('Result message2 from MQTT was not 0')
 
     except Exception as e:
         # Error appending data, most likely because credentials are stale.
@@ -86,11 +102,12 @@ def mqttConnect():
     mqttc.publish(CONFIG_W108, json.dumps(payload_W108config), 1, True)
     mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
     mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
+    mqttc.publish(CONFIGTstat, json.dumps(payloadTstatconfig), 1, True)
 
 def on2connect(mqttc, userdata, flags, rc):
     if rc==0:
         print(f"Connecting to MQTT on {HOST} {PORT} with result code {str(rc)}.")
-        mqttc.subscribe((WHTOPIC,0))
+        mqttc.subscribe((STATEwmPos,0))
         # mqttc.subscribe("$SYS/#")
     else:
         print(f"Bad connection Returned code= {str(rc)}.")
@@ -98,21 +115,32 @@ def on2connect(mqttc, userdata, flags, rc):
 def on2message(mqttc, userdata, msg):
     # The callback for when a PUBLISH message is received from the server.
 
-    Topic = msg.topic
-    whSet = float(msg.payload)
+    tRange = TRANGEMAX - TRANGEMIN    # Number of degrees in range
+    try:                # MUST BE AN INTEGER
+        whTSet = int(msg.payload)
+    except ValueError:  # Set to mid-Range rather than error if not integer
+        whTSet = int(round((tRange/2) + TRANGEMIN,0))
+        print (f"WARNING!! Value set to mid-range because not an integer.")
 
-    print (f"Message: {str(whSet)} from Topic: {Topic}")
+    Topic = msg.topic
+
+    print (f"Message: {str(whTSet)} from Topic: {Topic}")
 
     # Handle Message
-    if ( Topic == WHTOPIC and
-        isinstance(whSet, float) and
-        whSet <= TRANGEMAX and
-        whSet >= TRANGEMIN
+    if ( Topic == STATEBS and
+        int(whTSet) <= TRANGEMAX and
+        int(whTSet) >= TRANGEMIN
         ):
-        SetAngle(float(whSet))
+        # Scale the Temperature range to the angle
+        tScaled = whTSet - TRANGEMIN    # Temp degrees from start point
+        whASet = tScaled * (SERVOANGLE/tRange) # Scaled angle
+        SetAngle(whASet)
 
 def SetAngle(angle):
-    duty = angle / 27 + PWM0
+    if DIRECTION != "CW":   # Reverse the direction if needed
+        angle = SERVOANGLE - angle
+
+    duty = angle / (SERVOANGLE/10) + PWM0
 
     GPIO.output(SERVOGPIO, GPIO_ON)
     srvo.ChangeDutyCycle(duty)
@@ -121,22 +149,26 @@ def SetAngle(angle):
     srvo.ChangeDutyCycle(0)
     print (f"Set angle: {angle} duty: {duty}")
 
-temp = 0.0
-humidity = 0.0
-# set loop counter
-count = 0
-
 #  Get the parameter file
 with open("/opt/ThermoPI-Cottage/MYsecrets.yaml", "r") as ymlfile:
     MYs = yaml.safe_load(ymlfile)
 
+LOOP = MYs["MAIN"]["LOOP"]
+HOST = MYs["MAIN"]["HOST"]
+PORT = MYs["MAIN"]["PORT"]
+USER = MYs["MAIN"]["USER"]
+AREA = MYs["MAIN"]["AREA"]
+PWD = MYs["MAIN"]["PWD"]
+STETOPIC = MYs["MAIN"]["STETOPIC"]
+
 # GPIO Setup
 SERVOGPIO = int(MYs["WHCONTROL"]["SERVOGPIO"])
-TSTATGPIO = int(MYs["WHCONTROL"]["TSTATGPIO"])
-WHTOPIC = MYs["WHCONTROL"]["WHTOPIC"]
+TSTATGPIO = int(MYs["BINARY_SENSOR"]["TSTATGPIO"])
 PULSEFREQUENCY = float(MYs["WHCONTROL"]["PULSEFREQUENCY"])
 TRANGEMIN = float(MYs["WHCONTROL"]["TRANGEMIN"])
 TRANGEMAX = float(MYs["WHCONTROL"]["TRANGEMAX"])
+DIRECTION = MYs["WHCONTROL"]["DIRECTION"]
+SERVOANGLE = float(MYs["WHCONTROL"]["SERVOANGLE"])
 PWM0 = float(MYs["WHCONTROL"]["PWM0"])
 GPIO_ON = GPIO.HIGH
 GPIO_OFF = GPIO.LOW
@@ -147,81 +179,80 @@ GPIO.setup(TSTATGPIO, GPIO.IN)
 srvo = GPIO.PWM(SERVOGPIO,PULSEFREQUENCY)
 srvo.start(0)
 
-LOOP = MYs["MAIN"]["LOOP"]
-HOST = MYs["MAIN"]["HOST"]
-PORT = MYs["MAIN"]["PORT"]
-USER = MYs["MAIN"]["USER"]
-AREA = MYs["MAIN"]["AREA"]
-PWD = MYs["MAIN"]["PWD"]
-
 # Pulling the unique MAC SN section address using uuid and getnode() function 
 DEVICE_ID = (hex(uuid.getnode())[-6:]).upper()
 
 TOPIC = "homeassistant/sensor/"
+TOPICBS = "homeassistant/binary_sensor/"
 
 NAMED = MYs["MAIN"]["DEVICE_NAME"]
 D_ID = DEVICE_ID + '_' + NAMED
-LWT = TOPIC + D_ID + '/lwt'
+LWT = STETOPIC + D_ID + '/lwt'
 
 ADDR_W101 = MYs["W1"]["ADDR_W101"]
 NAME_W101 = MYs["W1"]["NAME_W101"]
 W101_ID =  DEVICE_ID + '_' + MYs["W1"]["W101_ID"]
 CONFIG_W101 = TOPIC + W101_ID + '/config'
-W101_STATE = TOPIC + W101_ID + '/state'
+W101_STATE = STETOPIC + W101_ID
 
 ADDR_W102 = MYs["W1"]["ADDR_W102"]
 NAME_W102 = MYs["W1"]["NAME_W102"]
 W102_ID =  DEVICE_ID + '_' + MYs["W1"]["W102_ID"]
 CONFIG_W102 = TOPIC + W102_ID + '/config'
-W102_STATE = TOPIC + W102_ID + '/state'
+W102_STATE = STETOPIC + W102_ID
 
 ADDR_W103 = MYs["W1"]["ADDR_W103"]
 NAME_W103 = MYs["W1"]["NAME_W103"]
 W103_ID =  DEVICE_ID + '_' + MYs["W1"]["W103_ID"]
 CONFIG_W103 = TOPIC + W103_ID + '/config'
-W103_STATE = TOPIC + W103_ID + '/state'
+W103_STATE = STETOPIC + W103_ID
 
 ADDR_W104 = MYs["W1"]["ADDR_W104"]
 NAME_W104 = MYs["W1"]["NAME_W104"]
 W104_ID =  DEVICE_ID + '_' + MYs["W1"]["W104_ID"]
 CONFIG_W104 = TOPIC + W104_ID + '/config'
-W104_STATE = TOPIC + W104_ID + '/state'
+W104_STATE = STETOPIC + W104_ID
 
 ADDR_W105 = MYs["W1"]["ADDR_W105"]
 NAME_W105 = MYs["W1"]["NAME_W105"]
 W105_ID =  DEVICE_ID + '_' + MYs["W1"]["W105_ID"]
 CONFIG_W105 = TOPIC + W105_ID + '/config'
-W105_STATE = TOPIC + W105_ID + '/state'
+W105_STATE = STETOPIC + W105_ID
 
 ADDR_W106 = MYs["W1"]["ADDR_W106"]
 NAME_W106 = MYs["W1"]["NAME_W106"]
 W106_ID =  DEVICE_ID + '_' + MYs["W1"]["W106_ID"]
 CONFIG_W106 = TOPIC + W106_ID + '/config'
-W106_STATE = TOPIC + W106_ID + '/state'
+W106_STATE = STETOPIC + W106_ID
 
 ADDR_W107 = MYs["W1"]["ADDR_W107"]
 NAME_W107 = MYs["W1"]["NAME_W107"]
 W107_ID =  DEVICE_ID + '_' + MYs["W1"]["W107_ID"]
 CONFIG_W107 = TOPIC + W107_ID + '/config'
-W107_STATE = TOPIC + W107_ID + '/state'
+W107_STATE = STETOPIC + W107_ID
 
 ADDR_W108 = MYs["W1"]["ADDR_W108"]
 NAME_W108 = MYs["W1"]["NAME_W108"]
 W108_ID =  DEVICE_ID + '_' + MYs["W1"]["W108_ID"]
 CONFIG_W108 = TOPIC + W108_ID + '/config'
-W108_STATE = TOPIC + W108_ID + '/state'
+W108_STATE = STETOPIC + W108_ID
 
 ADDR_W109 = MYs["W1"]["ADDR_W109"]
 NAME_W109 = MYs["W1"]["NAME_W109"]
 W109_ID =  DEVICE_ID + '_' + MYs["W1"]["W109_ID"]
 CONFIG_W109 = TOPIC + W109_ID + '/config'
-W109_STATE = TOPIC + W109_ID + '/state'
+W109_STATE = STETOPIC + W109_ID
 
 ADDR_W110 = MYs["W1"]["ADDR_W110"]
 NAME_W110 = MYs["W1"]["NAME_W110"]
 W110_ID =  DEVICE_ID + '_' + MYs["W1"]["W110_ID"]
 CONFIG_W110 = TOPIC + W110_ID + '/config'
-W110_STATE = TOPIC + W110_ID + '/state'
+W110_STATE = STETOPIC + W110_ID
+
+NAMETstat = MYs["BINARY_SENSOR"]["NAMETstat"]
+Tstat_ID = DEVICE_ID + '_' + MYs["BINARY_SENSOR"]["Tstat_ID"]
+CONFIGTstat = TOPICBS + Tstat_ID + '/config'
+STATEBS = STETOPIC + Tstat_ID
 
 # These are the s/n's used for the temp sensors.
 list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, ADDR_W109, ADDR_W110, 999, 999 ]
@@ -509,6 +540,30 @@ payload_W110config = {
     "frc_upd": True,
     'exp_aft': 400,
     "val_tpl": "{{ value_json.temperature }}"
+}
+
+payloadTstatconfig = {
+    "name": NAMETstat,
+    "stat_t": STATEBS,
+    "avty_t": LWT,
+    "pl_avail": pl_avail,
+    "pl_not_avail": pl_not_avail,
+    "uniq_id": Tstat_ID,
+    "dev": {
+        "ids": [
+        D_ID,
+        DEVICE_ID
+        ],
+        "name": name,
+        'sa': AREA,
+        "mf": mf,
+        "mdl": mdl,
+        "sw": sw,
+        "hw": hw,
+        "cu": cu
+    },
+    "frc_upd": True,
+    "dev_cla":"heat"
 }
 
 #Log Message to start
