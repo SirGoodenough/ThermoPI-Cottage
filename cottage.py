@@ -11,144 +11,6 @@ import RPi.GPIO as GPIO
 
 Release_date = "2023-05-30"
 
-# Subroutine look up 1 Wire temp(s)
-def W1():
-    global temp
-    global sensor
-    global list
-    global count
-    temp = 0.0
-    sensorSN = str(list[count])
-
-    sensor = W1ThermSensor(sensor_type=Sensor.DS18B20, sensor_id=sensorSN)
-    # Get the temp
-    tempC = sensor.get_temperature()
-    # Test the result.  Make sure it is reasonable and not a glitch.
-    if tempC is None or tempC > 150.0 or tempC < 1.0:
-        return
-    # Conversion to F & round to .1
-    tF = round((9.0/5.0 * tempC + 32.0), 2)
-    # Use while Troubleshooting...
-    # print("{:.1f}".format(tF))
-    # Done
-    temp = tF
-
-# Subroutine to send results to MQTT
-def mqttSend():
-    global temp
-    global mqttc
-    global count
-    global state_topic
-    global TSTATGPIO
-    global TStatState
-    global STATEBS
-
-    if GPIO.input(TSTATGPIO):
-        TStatState = "ON"
-    else:
-        TStatState = "OFF"
-
-    if temp == 0.0:
-        return
-
-    try:
-
-        payloadOut = {
-            "temperature": temp}
-        OutState = state_topic[count]
-        print(f"Updating {OutState} {json.dumps(payloadOut)}")
-        (result1,mid) = mqttc.publish(OutState, json.dumps(payloadOut), 1, True)
-
-        currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Date Time:   {currentdate}")
-        print(f"MQTT Update 1 result {result1}")
-
-        if result1 != 0:
-            raise ValueError('Result message from MQTT was not 0')
-
-        print(f"Updating {STATEBS} {TStatState}")
-        (result2,mid) = mqttc.publish(STATEBS, TStatState, 1, True)
-
-        print(f"MQTT Update 2 result {result2}")
-
-        if result2 != 0:
-            raise ValueError('Result message2 from MQTT was not 0')
-
-    except Exception as e:
-        # Error appending data, most likely because credentials are stale.
-        #  disconnect and re-connect...
-        print('MQTT error, trying re-connect: ' + str(e))
-        mqttc.publish(LWT, 'Offline', 0, True)
-        time.sleep(2)
-        mqttc.loop_stop()
-        mqttc.disconnect()
-        time.sleep(1)
-        mqttConnect()
-        pass
-
-def mqttConnect():
-    mqttc.on_connect = on2connect
-    mqttc.on_message = on2message
-    mqttc.connect(HOST, PORT, 60)
-    mqttc.loop_start()
-    mqttc.publish(LWT, "Online", 1, True)
-    mqttc.publish(CONFIG_W101, json.dumps(payload_W101config), 1, True)
-    mqttc.publish(CONFIG_W102, json.dumps(payload_W102config), 1, True)
-    mqttc.publish(CONFIG_W103, json.dumps(payload_W103config), 1, True)
-    mqttc.publish(CONFIG_W104, json.dumps(payload_W104config), 1, True)
-    mqttc.publish(CONFIG_W105, json.dumps(payload_W105config), 1, True)
-    mqttc.publish(CONFIG_W106, json.dumps(payload_W106config), 1, True)
-    mqttc.publish(CONFIG_W107, json.dumps(payload_W107config), 1, True)
-    mqttc.publish(CONFIG_W108, json.dumps(payload_W108config), 1, True)
-    mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
-    mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
-    mqttc.publish(CONFIGTstat, json.dumps(payloadTstatconfig), 1, True)
-
-def on2connect(mqttc, userdata, flags, rc):
-    if rc==0:
-        print(f"Connecting to MQTT on {HOST} {PORT} with result code {str(rc)}.")
-        mqttc.subscribe((STATEwmPos,0))
-        # mqttc.subscribe("$SYS/#")
-    else:
-        print(f"Bad connection Returned code= {str(rc)}.")
-
-def on2message(mqttc, userdata, msg):
-    # The callback for when a PUBLISH message is received from the server.
-
-    tRange = TRANGEMAX - TRANGEMIN    # Number of degrees in range
-    try:                # MUST BE AN INTEGER
-        whTSet = int(msg.payload)
-    except ValueError:  # Set to mid-Range rather than error if not integer
-        whTSet = int(round((tRange/2) + TRANGEMIN,0))
-        print (f"WARNING!! Value set to mid-range because not an integer.")
-
-    Topic = msg.topic
-
-    print (f"Message: {str(whTSet)} from Topic: {Topic}")
-
-    # Handle Message
-    if ( Topic == STATEBS and
-        int(whTSet) <= TRANGEMAX and
-        int(whTSet) >= TRANGEMIN
-        ):
-        # Scale the Temperature range to the angle
-        tScaled = whTSet - TRANGEMIN    # Temp degrees from start point
-        whASet = tScaled * (SERVOANGLE/tRange) # Scaled angle
-        SetAngle(whASet)
-
-def SetAngle(angle):
-    if DIRECTION != "CW":   # Reverse the direction if needed
-        angle = SERVOANGLE - angle
-
-    duty = angle / (SERVOANGLE/10) + PWM0
-
-    GPIO.output(SERVOGPIO, GPIO_ON)
-    srvo.ChangeDutyCycle(duty)
-    time.sleep(2)
-    GPIO.output(SERVOGPIO, GPIO_OFF)
-    srvo.ChangeDutyCycle(0)
-    print (f"Set angle: {angle} duty: {duty}")
-
 #  Get the parameter file
 with open("/opt/ThermoPI-Cottage/MYsecrets.yaml", "r") as ymlfile:
     MYs = yaml.safe_load(ymlfile)
@@ -542,30 +404,199 @@ payload_W110config = {
     "val_tpl": "{{ value_json.temperature }}"
 }
 
-payloadTstatconfig = {
-    "name": NAMETstat,
-    "stat_t": STATEBS,
+payloadTstatconfig1 = {
+    "name": NAMETstat1,
+    "stat_t": STATEBS1,
     "avty_t": LWT,
-    "pl_avail": pl_avail,
-    "pl_not_avail": pl_not_avail,
-    "uniq_id": Tstat_ID,
+    "pl_avail": "Online",
+    "pl_not_avail": "Offline",
+    "uniq_id": Tstat1_ID,
     "dev": {
         "ids": [
         D_ID,
         DEVICE_ID
         ],
-        "name": name,
+        "name": "ThermoPI",
         'sa': AREA,
-        "mf": mf,
-        "mdl": mdl,
-        "sw": sw,
-        "hw": hw,
-        "cu": cu
+        "mf": "SirGoodenough",
+        "mdl": "HomeAssistant Discovery for ThermoPI",
+        "sw": "https://github.com/SirGoodenough/ThermoPI"
     },
     "frc_upd": True,
     "dev_cla":"heat"
 }
 
+payloadTstatconfig2 = {
+    "name": NAMETstat2,
+    "stat_t": STATEBS2,
+    "avty_t": LWT,
+    "pl_avail": "Online",
+    "pl_not_avail": "Offline",
+    "uniq_id": Tstat2_ID,
+    "dev": {
+        "ids": [
+        D_ID,
+        DEVICE_ID
+        ],
+        "name": "ThermoPI",
+        'sa': AREA,
+        "mf": "SirGoodenough",
+        "mdl": "HomeAssistant Discovery for ThermoPI",
+        "sw": "https://github.com/SirGoodenough/ThermoPI"
+    },
+    "frc_upd": True,
+    "dev_cla":"heat"
+}
+
+
+# Subroutine look up 1 Wire temp(s)
+def W1():
+    global temp
+    global sensor
+    global list
+    global count
+    temp = 0.0
+    sensorSN = str(list[count])
+
+    sensor = W1ThermSensor(sensor_type=Sensor.DS18B20, sensor_id=sensorSN)
+    # Get the temp
+    tempC = sensor.get_temperature()
+    # Test the result.  Make sure it is reasonable and not a glitch.
+    if tempC is None or tempC > 150.0 or tempC < 1.0:
+        return
+    # Conversion to F & round to .1
+    tF = round((9.0/5.0 * tempC + 32.0), 2)
+    # Use while Troubleshooting...
+    # print("{:.1f}".format(tF))
+    # Done
+    temp = tF
+
+# Subroutine to send results to MQTT
+def mqttSend():
+    global temp
+    global mqttc
+    global count
+    global state_topic
+    global TSTATGPIO
+    global TStatState
+    global STATEBS
+
+    if GPIO.input(TSTATGPIO):
+        TStatState = "ON"
+    else:
+        TStatState = "OFF"
+
+    if temp == 0.0:
+        return
+
+    try:
+
+        payloadOut = {
+            "temperature": temp}
+        OutState = state_topic[count]
+        print(f"Updating {OutState} {json.dumps(payloadOut)}")
+        (result1,mid) = mqttc.publish(OutState, json.dumps(payloadOut), 1, True)
+
+        currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
+        print(f"Date Time:   {currentdate}")
+        print(f"MQTT Update 1 result {result1}")
+
+        if result1 != 0:
+            raise ValueError('Result message from MQTT was not 0')
+
+
+        print(f"Updating {STATEBS1} {TStatState1}")
+        (result2,mid) = mqttc.publish(STATEBS1, TStatState1, 1, True)
+
+        print(f"MQTT Update 2 result {result2}")
+
+        if result2 != 0:
+            raise ValueError('Result message2 from MQTT was not 0')
+
+
+        print(f"Updating {STATEBS2} {TStatState2}")
+        (result3,mid) = mqttc.publish(STATEBS2, TStatState2, 1, True)
+
+        print(f"MQTT Update 3 result {result3}")
+
+        if result3 != 0:
+            raise ValueError('Result message3 from MQTT was not 0')
+
+    except Exception as e:
+        # Error appending data, most likely because credentials are stale.
+        #  disconnect and re-connect...
+        print('MQTT error, trying re-connect: ' + str(e))
+        mqttc.publish(LWT, 'Offline', 0, True)
+        time.sleep(2)
+        mqttc.loop_stop()
+        mqttc.disconnect()
+        time.sleep(1)
+        mqttConnect()
+        pass
+
+def mqttConnect():
+    mqttc.on_connect = on2connect
+    mqttc.on_message = on2message
+    mqttc.connect(HOST, PORT, 60)
+    mqttc.loop_start()
+    mqttc.publish(LWT, "Online", 1, True)
+    mqttc.publish(CONFIG_W101, json.dumps(payload_W101config), 1, True)
+    mqttc.publish(CONFIG_W102, json.dumps(payload_W102config), 1, True)
+    mqttc.publish(CONFIG_W103, json.dumps(payload_W103config), 1, True)
+    mqttc.publish(CONFIG_W104, json.dumps(payload_W104config), 1, True)
+    mqttc.publish(CONFIG_W105, json.dumps(payload_W105config), 1, True)
+    mqttc.publish(CONFIG_W106, json.dumps(payload_W106config), 1, True)
+    mqttc.publish(CONFIG_W107, json.dumps(payload_W107config), 1, True)
+    mqttc.publish(CONFIG_W108, json.dumps(payload_W108config), 1, True)
+    mqttc.publish(CONFIG_W109, json.dumps(payload_W109config), 1, True)
+    mqttc.publish(CONFIG_W110, json.dumps(payload_W110config), 1, True)
+    mqttc.publish(CONFIGTstat1, json.dumps(payloadTstatconfig1), 1, True)
+    mqttc.publish(CONFIGTstat2, json.dumps(payloadTstatconfig2), 1, True)
+
+def on2connect(mqttc, userdata, flags, rc):
+    if rc==0:
+        print(f"Connecting to MQTT on {HOST} {PORT} with result code {str(rc)}.")
+        mqttc.subscribe((WHTOPIC,0))
+        # mqttc.subscribe("$SYS/#")
+    else:
+        print(f"Bad connection Returned code= {str(rc)}.")
+
+def on2message(mqttc, userdata, msg):
+    # The callback for when a PUBLISH message is received from the server.
+
+    tRange = TRANGEMAX - TRANGEMIN    # Number of degrees in range
+    try:                # MUST BE AN INTEGER
+        whTSet = int(msg.payload)
+    except ValueError:  # Set to mid-Range rather than error if not integer
+        whTSet = int(round((tRange/2) + TRANGEMIN,0))
+        print (f"WARNING!! Value set to mid-range because not an integer.")
+
+    Topic = msg.topic
+
+    print (f"Message: {str(whTSet)} from Topic: {Topic}")
+
+    # Handle Message
+    if ( Topic == WHTOPIC and
+        int(whTSet) <= TRANGEMAX and
+        int(whTSet) >= TRANGEMIN
+        ):
+        # Scale the Temperature range to the angle
+        tScaled = whTSet - TRANGEMIN    # Temp degrees from start point
+        whASet = tScaled * (SERVOANGLE/tRange) # Scaled angle
+        SetAngle(whASet)
+
+def SetAngle(angle):
+    if DIRECTION != "CW":   # Reverse the direction if needed
+        angle = SERVOANGLE - angle
+
+    duty = angle / (SERVOANGLE/10) + PWM0
+
+    GPIO.output(SERVOGPIO, GPIO_ON)
+    srvo.ChangeDutyCycle(duty)
+    time.sleep(2)
+    GPIO.output(SERVOGPIO, GPIO_OFF)
+    srvo.ChangeDutyCycle(0)
+    print (f"Set angle: {angle} duty: {duty}")
 #Log Message to start
 print(f"Logging {D_ID} sensor measurements every {LOOP} seconds.")
 print(f"Press Ctrl-C to quit.")
