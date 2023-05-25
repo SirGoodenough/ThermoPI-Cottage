@@ -489,14 +489,19 @@ def mqttSend():
     global TStatState
     global STATEBS
 
-    if GPIO.input(TSTATGPIO):
-        TStatState = "ON"
+    if GPIO.input(TSTATGPIO1):  # Inverse read on the sensor
+        TStatState1 = "OFF"
     else:
-        TStatState = "OFF"
+        TStatState1 = "ON"
+    if GPIO.input(TSTATGPIO2):  # Inverse read on the sensor
+        TStatState2 = "OFF"
+    else:
+        TStatState2 = "ON"
 
-    if temp == 0.0:
-        return
+    currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
+    print(f"Date Time:   {currentdate}")
 
+        # Publish to MQTT
     try:
 
         payloadOut = {
@@ -505,8 +510,6 @@ def mqttSend():
         print(f"Updating {OutState} {json.dumps(payloadOut)}")
         (result1,mid) = mqttc.publish(OutState, json.dumps(payloadOut), 1, True)
 
-        currentdate = time.strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Date Time:   {currentdate}")
         print(f"MQTT Update 1 result {result1}")
 
         if result1 != 0:
