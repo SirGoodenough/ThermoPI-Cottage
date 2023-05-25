@@ -25,7 +25,9 @@ STETOPIC = MYs["MAIN"]["STETOPIC"]
 
 # GPIO Setup
 SERVOGPIO = int(MYs["WHCONTROL"]["SERVOGPIO"])
-TSTATGPIO = int(MYs["BINARY_SENSOR"]["TSTATGPIO"])
+TSTATGPIO1 = int(MYs["BINARY_SENSOR"]["TSTATGPIO1"])
+TSTATGPIO2 = int(MYs["BINARY_SENSOR"]["TSTATGPIO2"])
+WHTOPIC = MYs["WHCONTROL"]["WHTOPIC"]
 PULSEFREQUENCY = float(MYs["WHCONTROL"]["PULSEFREQUENCY"])
 TRANGEMIN = float(MYs["WHCONTROL"]["TRANGEMIN"])
 TRANGEMAX = float(MYs["WHCONTROL"]["TRANGEMAX"])
@@ -37,9 +39,10 @@ GPIO_OFF = GPIO.LOW
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(SERVOGPIO, GPIO.OUT)
-GPIO.setup(TSTATGPIO, GPIO.IN)
+GPIObs = [TSTATGPIO1,TSTATGPIO2]
+GPIO.setup(GPIObs, GPIO.IN)
 srvo = GPIO.PWM(SERVOGPIO,PULSEFREQUENCY)
-srvo.start(0)
+srvo.start(7.5)
 
 # Pulling the unique MAC SN section address using uuid and getnode() function 
 DEVICE_ID = (hex(uuid.getnode())[-6:]).upper()
@@ -111,10 +114,15 @@ W110_ID =  DEVICE_ID + '_' + MYs["W1"]["W110_ID"]
 CONFIG_W110 = TOPIC + W110_ID + '/config'
 W110_STATE = STETOPIC + W110_ID
 
-NAMETstat = MYs["BINARY_SENSOR"]["NAMETstat"]
-Tstat_ID = DEVICE_ID + '_' + MYs["BINARY_SENSOR"]["Tstat_ID"]
-CONFIGTstat = TOPICBS + Tstat_ID + '/config'
-STATEBS = STETOPIC + Tstat_ID
+NAMETstat1 = MYs["BINARY_SENSOR"]["NAMETstat1"]
+Tstat1_ID = DEVICE_ID + '_' + MYs["BINARY_SENSOR"]["Tstat1_ID"]
+CONFIGTstat1 = TOPICBS + Tstat1_ID + '/config'
+STATEBS1 = STETOPIC + Tstat1_ID
+
+NAMETstat2 = MYs["BINARY_SENSOR"]["NAMETstat2"]
+Tstat2_ID = DEVICE_ID + '_' + MYs["BINARY_SENSOR"]["Tstat2_ID"]
+CONFIGTstat2 = TOPICBS + Tstat2_ID + '/config'
+STATEBS2 = STETOPIC + Tstat2_ID
 
 # These are the s/n's used for the temp sensors.
 list = [999, ADDR_W101, ADDR_W102, ADDR_W103, ADDR_W104, ADDR_W105, ADDR_W106, ADDR_W107, ADDR_W108, ADDR_W109, ADDR_W110, 999, 999 ]
