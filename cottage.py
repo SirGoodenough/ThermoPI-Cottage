@@ -9,7 +9,7 @@ import json
 import uuid
 import RPi.GPIO as GPIO
 
-Release_date = "2023-05-30"
+Release_date = "v2023.05.27 Agiel"
 
 #  Get the parameter file
 with open("/opt/ThermoPI-Cottage/MYsecrets.yaml", "r") as ymlfile:
