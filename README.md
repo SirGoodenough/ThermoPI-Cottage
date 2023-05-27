@@ -1,6 +1,6 @@
 # ThermoPI-Cottage
 
-Use a Raspberry PI connected to ten Dallas 1 wire temperature sensors to send the results to a MQTT server.
+Use a Raspberry PI connected to ten Dallas 1 wire temperature sensors to send the results to a MQTT server. Also connected is a servo to adjust the temperature setting on the water and 2 GPIO sensors to report the status of the zone thermostats.
 
 ## USAGE
 
@@ -9,9 +9,27 @@ Install the program into opt/ThermoPI-Cottage or any suitable location. (Some pe
 You will need to rename the file ***MYsecretsSample.yaml*** to ***MYsecrets.yaml***.
 Edit the contents of the new ***MYsecrets.yaml*** to match your MQTT & Home Assistant installation and requirements. You will also need to supply the full path to the secrets file in the **Get the parameter file** section of this python code around line 90.
 
-You will need to determine the unique serial number of each probe and put that in the parameter file.  Here is a good primer on how to find these: [Get the Probe Serial Numbers](https://www.industrialshields.com/blog/raspberry-pi-for-industry-26/post/ii-temperature-sensor-raspberry-plc-how-to-get-the-temperature-316).  To figure out which is which, simply use a glass of ice water to cool the probes one by one.  Watch the temperature change and mark them. Set-up the parameter file accordingly.
+You will need to determine the unique serial number of each probe and put that in the parameter file. Here is a good primer on how to find these: [Get the Probe Serial Numbers](https://www.industrialshields.com/blog/raspberry-pi-for-industry-26/post/ii-temperature-sensor-raspberry-plc-how-to-get-the-temperature-316). To figure out which is which, simply use a glass of ice water to cool the probes one by one. Watch the temperature change and mark them. Set-up the parameter file accordingly.
 
 This program grabs the 2nd half of the MAC address to use as the device ID. This only works consistently when there is only 1 Ethernet interface configured or you have your multiple interfaces cloned to the same MAC Address. For instance if it boots from WIFI, it will grab that MAC, and if it uses the Ethernet cable or a USB interface, it will grab that MAC. You get my point. This can be avoided by hard coding the DeviceID with the random and unique number of your choice. Also I have not tested this with IP6 addresses. If you have solutions to any of this, please share.
+
+## SERVO
+
+I have programmed around the servo I decided to buy for this, but certainly other servos can be selected. This [servo](https://www.amazon.com/dp/B083GNMBB6?tag=drzzs0e-20) provides 25kg of force and 270 degrees of travel. I did not know what I needed, so this is what I bought. There are parameters in the yaml file to set the servo direction, the rotation range, the frequency, and the PWM0 value, so a wide range of servo's can be used.
+
+To connect the servo to the temperature control knob, I didn't want to remove the knob or damage it. I wanted it to be completely removable. What I did was take an impression of the knob in some kids playdoh and froze it in some water so it kept it's shape on the travel home. You see the water heater was 300 miles away from my 3D printer and my measuring calipers. I created a shape in TinkerCad that would fit well into the playdoh impression and therefore be the shape of the knob. I then used this knob shape as a 'hole' in TinkerCan and created a structure around it. I then added a couple of holes for heat set inserts and printed it. I then created a mount arm that I modified from Thingiverse and a plate to mount the servo motor to that was big enough to drill and mount to the water heater. I had no idea how that was going to happen, so I just left it open for whatever.
+
+Links to these TinkerCad files are here. Use what you can and modify what you cannot.
+
+[Backplate Motor Mount](https://www.tinkercad.com/things/8xlUXFzqAMQ-water-heater-backplate)
+
+[Servo Arm](https://www.tinkercad.com/things/bKByy3qXluZ-servo-arm-water-heater)
+
+[Water Heater Knob](https://www.tinkercad.com/things/fV5ZxNxaQiI-water-heater-knob)
+
+## THERMOSTAT SENSORS
+
+I was stuck with a 2 zone controller that had 2 zone thermostats connected to it and no real place to 'sense' the state of those thermostats. Modifying the zone controller was not an option. What I decided to do was buy a couple of [AC/DC to DC Buc converters](https://www.amazon.com/dp/B09QCVY43Z?tag=drzzs0e-20). These are connected to the AC side across the thermostat connections. These points will see 24AC when the thermostat in 'open' (no heat) and near 0V when the points are closed (asking for heat). The devices were adjusted to output 5VDC and a 5k resistor was soldered across the output as a pull-down. The result in a 5VDC signal for each thermostat that will be HIGH when the thermostat is not wanting heat and LOW when the thermostat is asking for heat. These are connected between a couple of GPIO's and gnd. The program reports 'ON' when the GPIO is 'LOW' and OFF when the GPIO is 'HIGH'. This also means if the devices are not working, they will report as hot. Unfortunate,but I didn't know a way around it.
 
 ## AUTO-Start
 
