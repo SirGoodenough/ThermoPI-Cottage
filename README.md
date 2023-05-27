@@ -29,7 +29,7 @@ Links to these TinkerCad files are here. Use what you can and modify what you ca
 
 ## THERMOSTAT SENSORS
 
-I was stuck with a 2 zone controller that had 2 zone thermostats connected to it and no real place to 'sense' the state of those thermostats. Modifying the zone controller was not an option. What I decided to do was buy a couple of [AC/DC to DC Buc converters](https://www.amazon.com/dp/B09QCVY43Z?tag=drzzs0e-20). These are connected to the AC side across the thermostat connections. These points will see 24AC when the thermostat in 'open' (no heat) and near 0V when the points are closed (asking for heat). The devices were adjusted to output 5VDC and a 5k resistor was soldered across the output as a pull-down. The result in a 5VDC signal for each thermostat that will be HIGH when the thermostat is not wanting heat and LOW when the thermostat is asking for heat. These are connected between a couple of GPIO's and gnd. The program reports 'ON' when the GPIO is 'LOW' and OFF when the GPIO is 'HIGH'. This also means if the devices are not working, they will report as hot. Unfortunate,but I didn't know a way around it.
+I was stuck with a 2 zone controller that had 2 zone thermostats connected to it and no real place to 'sense' the state of those thermostats. Modifying the zone controller was not an option. What I decided to do was buy a couple of [AC/DC to DC Buck converters](https://www.amazon.com/dp/B09QCVY43Z?tag=drzzs0e-20). These are connected to the AC side across the thermostat connections. These points will see 24AC when the thermostat in 'open' (no heat) and near 0V when the points are closed (asking for heat). The devices were adjusted to output 5VDC and a 5k resistor was soldered across the output as a pull-down. The result in a 5VDC signal for each thermostat that will be HIGH when the thermostat is not wanting heat and LOW when the thermostat is asking for heat. These are connected between a couple of GPIO's and gnd. The program reports 'ON' when the GPIO is 'LOW' and OFF when the GPIO is 'HIGH'. This also means if the devices are not working, they will report as hot. Unfortunate,but I didn't know a way around it.
 
 ## AUTO-Start
 
@@ -59,14 +59,11 @@ Program requirements (as written):
 This is roughly the circuit used with this program:
 ![Sample Circuit matching this software](ThermoPI-Cottage.png)
 
-For my install I used this adapter board to connect the probes: 
-<https://www.amazon.com/Screw-Terminal-Breakout-Module-Raspberry/dp/B08LH97XCR?tag=drzzs0e-20>
+For my install I used this [adapter board](https://www.amazon.com/Screw-Terminal-Breakout-Module-Raspberry/dp/B08LH97XCR?tag=drzzs0e-20) to connect the probes.
 
-These are the sensors I used:
-<https://www.amazon.com/dp/B08W27W7LJ?tag=drzzs0e-20>
+These are the [dallas sensors](https://www.amazon.com/dp/B08W27W7LJ?tag=drzzs0e-20) I used.
 
-These are the JST Connector pigtails I used:
-<https://www.amazon.com/HKBAYI-50Pair-50sets-Connector-WS2812B/dp/B00NBSH4CA?tag=drzzs0e-20>
+These are the [JST Connector](https://www.amazon.com/HKBAYI-50Pair-50sets-Connector-WS2812B/dp/B00NBSH4CA?tag=drzzs0e-20) pigtails I used.
 
 ### Contact Links
 
